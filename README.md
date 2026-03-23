@@ -1,79 +1,131 @@
-# 🧠 AI-Based Crowd Detection & Heatmap Generation
-
-An AI-powered system that detects and analyzes crowd density from video footage using **Computer Vision and Deep Learning**.  
-The project processes videos captured at different time intervals, detects people in each frame, and generates **heatmaps to visualize crowd distribution** for smart monitoring.
-
----
+# 🎯 Real-Time Crowd Detection & Heatmap Generation
 
 ## 📌 Project Overview
 
-Monitoring crowd density in public areas is important for safety, security, and efficient management.  
-Manual monitoring can be time-consuming and prone to errors.  
+This project focuses on **real-time crowd detection and analysis** using a trained deep learning model. It detects people in live video streams and generates **heatmaps** to visualize crowd density and movement patterns.
 
-This project uses **Artificial Intelligence techniques** to automatically detect people from video footage and analyze crowd density. The system generates **visual heatmaps** that highlight crowded and less crowded areas, helping authorities make better decisions for crowd management.
+The system can be used for:
 
----
-
-## 🎯 Objectives
-
-- Detect people in video footage using AI-based object detection.
-- Count the number of people present in each frame.
-- Generate heatmaps to visualize crowd density.
-- Compare crowd levels across different time intervals.
-- Provide insights for smart monitoring of public spaces.
+* Public safety monitoring
+* Crowd management
+* Smart surveillance systems
 
 ---
 
-## ⚙️ Methodology
+## 🚀 Features
 
-### 1️⃣ Video Input
-Videos of the same location are collected at different time intervals for analysis.
-
-### 2️⃣ Frame Extraction
-The video is processed using **OpenCV** to extract individual frames.
-
-### 3️⃣ Person Detection
-The **YOLOv8 deep learning model** is used to detect people in each frame.
-
-### 4️⃣ Crowd Counting
-Detected individuals are counted and their positions are recorded.
-
-### 5️⃣ Heatmap Generation
-**Matplotlib** is used to generate heatmaps representing crowd density.
-
-### 6️⃣ Visualization
-The system displays the generated heatmap along with the total number of people detected.
+* 🎥 Real-time crowd detection using video/webcam
+* 📦 Pre-trained custom model (`best.pt`)
+* 🔥 Heatmap generation for crowd density visualization
+* 📊 Detection on recorded video
+* ⚡ Fast and efficient processing
 
 ---
 
-## 🛠️ Technologies Used
+## 🧠 Model Details
 
-| Technology | Purpose |
-|------------|--------|
-| Python | Core programming language |
-| OpenCV | Video processing and frame extraction |
-| YOLOv8 | Object detection model |
-| NumPy | Data processing |
-| Matplotlib | Heatmap visualization |
+* Model Used: YOLO-based object detection
+* Task: Person detection
+* Output:
 
----
-
-## 📊 Expected Results
-
-- Accurate detection of people in video footage  
-- Visualization of crowd density using heatmaps  
-- Identification of crowded and less crowded zones  
-- Comparison of crowd levels at different times  
-- A simple AI-based monitoring system for crowd analysis  
+  * Bounding boxes around people
+  * Heatmap showing crowded regions
 
 ---
 
-## 🚀 Applications
+## 📂 Project Structure
 
-- Smart city surveillance  
-- Crowd management during events  
-- Monitoring railway stations and airports  
-- Shopping malls and public spaces  
-- Security and safety analysis  
+```
+real-time-crowd-detection/
+│
+├── camera_test.py          # Real-time webcam detection
+├── realtime_detect.py      # Detection on video
+├── best.pt                 # Trained model
+├── runs/                   # Training results 
+├── sample_video.mp4        # Sample output video
+├── README.md
+```
 
 ---
+
+## 📊 Dataset
+
+The dataset used for training is available here:
+
+👉 [Download Dataset](PASTE_YOUR_GOOGLE_DRIVE_LINK_HERE)
+
+---
+
+## 🎬 Sample Output
+
+A sample output video demonstrating detection and heatmap:
+
+👉 [Watch Sample Video](PASTE_YOUR_VIDEO_LINK_HERE)
+
+---
+
+## ⚙️ How to Run
+
+### 1. Install Dependencies
+
+```
+pip install opencv-python torch ultralytics
+```
+
+### 2. Run Real-Time Detection
+
+```
+python camera_test.py
+```
+
+### 3. Run Detection on Video
+
+```
+python realtime_detect.py
+```
+
+---
+
+## 🔥 Heatmap Generation
+
+The system generates heatmaps by:
+
+* Tracking detected people across frames
+* Accumulating their positions
+* Highlighting high-density areas
+
+This helps in identifying:
+
+* Crowded zones
+* Movement patterns
+* High traffic regions
+
+---
+
+## 🖼️ Output
+
+* Bounding boxes on detected people
+* Real-time video processing
+* Heatmap overlay on frames
+
+---
+
+## 🎓 Applications
+
+* Smart city surveillance
+* Event crowd monitoring
+* Traffic and pedestrian analysis
+* Safety and security systems
+
+---
+
+## 📌 Conclusion
+
+This project demonstrates how AI can be used for **real-time crowd monitoring and analysis**. The integration of detection and heatmaps provides deeper insights into crowd behavior.
+
+---
+
+## 🙋‍♀️ Author
+
+**Tejaswini**
+Computer Science Student 💻
