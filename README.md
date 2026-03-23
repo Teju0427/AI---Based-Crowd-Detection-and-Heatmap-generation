@@ -122,10 +122,3 @@ This helps in identifying:
 ## 📌 Conclusion
 
 This project demonstrates how AI can be used for **real-time crowd monitoring and analysis**. The integration of detection and heatmaps provides deeper insights into crowd behavior.
-
----
-
-## 🙋‍♀️ Author
-
-**Tejaswini**
-Computer Science Student 💻
