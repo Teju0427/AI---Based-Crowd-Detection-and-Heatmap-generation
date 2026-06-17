@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>{% block title %}CrowdSense AI{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+<div class="page-bg"></div>
+
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidenav">
+  <div class="nav-logo">
+    <div class="nav-logo-ring"><div class="nav-logo-dot"></div></div>
+  </div>
+
+  <div class="nav-links">
+    <a href="/" class="nav-link {% if active=='dashboard' %}active{% endif %}" title="Dashboard">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Live
+    </a>
+    <a href="/analytics" class="nav-link {% if active=='analytics' %}active{% endif %}" title="Analytics">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Stats
+    </a>
+    <a href="/heatmap" class="nav-link {% if active=='heatmap' %}active{% endif %}" title="Heatmap">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      Heat
+    </a>
+    <a href="/alerts" class="nav-link {% if active=='alerts' %}active{% endif %}" title="Alerts">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      Alerts
+    </a>
+    <a href="/settings" class="nav-link {% if active=='settings' %}active{% endif %}" title="Settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Config
+    </a>
+  </div>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-title">{% block page_name %}CrowdSense AI{% endblock %}</div>
+    <div class="topbar-right">
+      <span id="topbar-time">--:--:--</span>
+      <span id="live-badge" class="live-badge"><span class="dot"></span> LIVE</span>
+    </div>
+  </div>
+
+  <!-- Page Content -->
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// Clock
+setInterval(() => {
+  document.getElementById('topbar-time').textContent = new Date().toLocaleTimeString('en-GB');
+}, 1000);
+
+// Alert badge watcher
+async function checkAlert() {
+  try {
+    const r = await fetch('/api/stats'); const d = await r.json();
+    const badge = document.getElementById('live-badge');
+    if (d.alert_active) {
+      badge.className = 'live-badge alert';
+      badge.innerHTML = '<span class="dot"></span> ALERT';
+    } else {
+      badge.className = 'live-badge';
+      badge.innerHTML = '<span class="dot"></span> LIVE';
+    }
+  } catch(e) {}
+}
+setInterval(checkAlert, 2000); checkAlert();
+
+// Toast helper
+function toast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + (ok ? 'ok' : 'err');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// Chart global defaults
+Chart.defaults.color = '#3d6080';
+Chart.defaults.font.family = 'JetBrains Mono';
+Chart.defaults.font.size = 10;
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

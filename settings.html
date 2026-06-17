@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% set active = "settings" %}
+{% block title %}Settings — CrowdSense AI{% endblock %}
+{% block page_name %}/ Settings{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-title">Settings</div>
+  <div class="page-sub">Configure detection thresholds, email alerts, and system behaviour</div>
+</div>
+
+<div class="grid-2">
+
+  <!-- Alert settings -->
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">🔔 Alert Configuration</span>
+      <span class="card-badge">EMAIL</span>
+    </div>
+    <div class="card-body">
+      <div class="form-group">
+        <label class="form-label">Alert Recipient Email</label>
+        <input class="form-input" type="email" id="cfg-email" value="{{ email }}" placeholder="recipient@example.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Crowd Threshold (person count)</label>
+        <input class="form-input" type="number" id="cfg-threshold" value="{{ threshold }}" min="1" max="500"/>
+        <div style="font-size:11px;color:var(--dim);margin-top:6px">Email alert fires when detected persons ≥ this value</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Alert Cooldown (seconds)</label>
+        <input class="form-input" type="number" id="cfg-cooldown" value="{{ cooldown }}" min="30" max="3600"/>
+        <div style="font-size:11px;color:var(--dim);margin-top:6px">Minimum seconds between repeated alerts (prevents spam)</div>
+      </div>
+      <button class="btn btn-cyan" onclick="saveSettings()">✓ Save Alert Settings</button>
+    </div>
+  </div>
+
+  <!-- System info -->
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">⚙️ System Status</span>
+      <span class="card-badge">LIVE</span>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
+          <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--dim)">MODEL</span>
+          <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--cyan)">YOLOv8n</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
+          <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--dim)">CAMERA</span>
+          <span id="sys-cam" style="font-family:'JetBrains Mono';font-size:11px;color:var(--green)">Checking…</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
+          <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--dim)">FPS</span>
+          <span id="sys-fps" style="font-family:'JetBrains Mono';font-size:11px;color:var(--cyan)">–</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
+          <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--dim)">PERSONS NOW</span>
+          <span id="sys-persons" style="font-family:'JetBrains Mono';font-size:11px;color:var(--cyan)">–</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
+          <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--dim)">ALERT ACTIVE</span>
+          <span id="sys-alert" style="font-family:'JetBrains Mono';font-size:11px;">–</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
+          <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--dim)">DB LOG INTERVAL</span>
+          <span style="font-family:'JetBrains Mono';font-size:11px;color:var(--cyan)">20 seconds</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detected classes -->
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">🎯 Detected Classes (COCO)</span>
+      <span class="card-badge">YOLOV8</span>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        {% for icon, label, cls, color in [
+          ('👤','Person','Class 0','#00c8ff'),
+          ('🚗','Car','Class 2','#ffb300'),
+          ('🏍️','Motorcycle','Class 3','#ffb300'),
+          ('🚌','Bus','Class 5','#ffb300'),
+          ('🚛','Truck','Class 7','#ffb300'),
+        ] %}
+        <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
+          <span style="font-size:18px">{{ icon }}</span>
+          <span style="flex:1;font-size:13px;font-weight:600">{{ label }}</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:{{ color }};padding:2px 8px;background:rgba(0,0,0,.3);border-radius:4px">{{ cls }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Gmail setup guide -->
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">📧 Gmail Setup Guide</span>
+      <span class="card-badge">REQUIRED</span>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        {% for step, text in [
+          ('1','Go to myaccount.google.com'),
+          ('2','Security → 2-Step Verification → Enable'),
+          ('3','Search "App Passwords" → Create one for Mail'),
+          ('4','Copy the 16-char password into app.py EMAIL_PASSWORD'),
+          ('5','Set EMAIL_SENDER to your Gmail address'),
+          ('6','Set EMAIL_RECIPIENT to the alert destination'),
+        ] %}
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px;background:var(--bg2);border-radius:8px">
+          <div style="width:22px;height:22px;border-radius:50%;background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.3);
+               display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:10px;color:var(--cyan);flex-shrink:0">{{ step }}</div>
+          <div style="font-size:12px;color:var(--dim);padding-top:2px">{{ text }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function saveSettings() {
+  const payload = {
+    threshold: parseInt(document.getElementById('cfg-threshold').value),
+    cooldown:  parseInt(document.getElementById('cfg-cooldown').value),
+    email:     document.getElementById('cfg-email').value,
+  };
+  try {
+    const r = await fetch('/api/settings', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    await r.json();
+    toast('✓ Settings saved successfully');
+  } catch(e) { toast('✗ Failed to save', false); }
+}
+
+async function pollSys() {
+  try {
+    const r = await fetch('/api/stats'); const d = await r.json();
+    document.getElementById('sys-fps').textContent     = d.fps;
+    document.getElementById('sys-persons').textContent = d.persons;
+    document.getElementById('sys-cam').textContent     = d.cam_ok ? 'Connected ✓' : 'Demo Mode';
+    document.getElementById('sys-cam').style.color     = d.cam_ok ? 'var(--green)' : 'var(--amber)';
+    const al = document.getElementById('sys-alert');
+    al.textContent = d.alert_active ? 'YES ⚠' : 'No';
+    al.style.color = d.alert_active ? 'var(--red)' : 'var(--green)';
+  } catch(e) {}
+}
+pollSys(); setInterval(pollSys, 2000);
+</script>
+{% endblock %}

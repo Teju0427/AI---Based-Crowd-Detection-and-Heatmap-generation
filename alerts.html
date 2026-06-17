@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% set active = "alerts" %}
+{% block title %}Alerts — CrowdSense AI{% endblock %}
+{% block page_name %}/ Alerts{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-title">Alert Log</div>
+  <div class="page-sub">All threshold-crossing events — email alerts dispatched for each</div>
+</div>
+
+<!-- Summary cards -->
+<div class="stat-grid mb-22">
+  <div class="stat-card c-red">
+    <div class="stat-glow"></div>
+    <div class="stat-label">Total Alerts Today</div>
+    <div class="stat-value" id="al-count">–</div>
+    <div class="stat-sub">Since midnight</div>
+  </div>
+  <div class="stat-card c-amber">
+    <div class="stat-glow"></div>
+    <div class="stat-label">Current Count</div>
+    <div class="stat-value" id="al-current">–</div>
+    <div class="stat-sub" id="al-status">Monitoring…</div>
+  </div>
+  <div class="stat-card c-cyan">
+    <div class="stat-glow"></div>
+    <div class="stat-label">Highest Peak</div>
+    <div class="stat-value" id="al-peak">–</div>
+    <div class="stat-sub">Max objects detected</div>
+  </div>
+  <div class="stat-card c-green">
+    <div class="stat-glow"></div>
+    <div class="stat-label">Last Alert</div>
+    <div class="stat-value" style="font-size:1.3rem" id="al-last">–</div>
+    <div class="stat-sub">Time of last event</div>
+  </div>
+</div>
+
+<!-- Alert timeline chart -->
+<div class="card mb-22">
+  <div class="card-head">
+    <span class="card-title">📊 Alert Events — Today's Timeline</span>
+    <span class="card-badge">THRESHOLD CROSSINGS</span>
+  </div>
+  <div class="card-body">
+    <div class="chart-wrap" style="height:200px"><canvas id="alertTimelineChart"></canvas></div>
+  </div>
+</div>
+
+<!-- Alert list -->
+<div class="card">
+  <div class="card-head">
+    <span class="card-title">🔔 Recent Alert Events</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="al-badge" class="card-badge">0 events</span>
+      <button class="btn btn-ghost" style="font-size:11px;padding:5px 12px" onclick="loadAlerts()">↻ Refresh</button>
+    </div>
+  </div>
+  <div class="card-body" style="padding:12px">
+    <div id="alert-list"><div class="no-data">Loading…</div></div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const tlChart = new Chart(document.getElementById('alertTimelineChart').getContext('2d'), {
+  type: 'scatter',
+  data: { datasets: [{
+    label: 'Alert Events', data: [],
+    backgroundColor: 'rgba(255,59,92,0.7)', pointRadius: 8, pointHoverRadius: 12,
+    borderColor: '#ff3b5c', borderWidth: 1,
+  }]},
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false }, tooltip:{
+      callbacks:{ label: ctx => `${ctx.raw.label}: ${ctx.raw.y} objects` }
+    }},
+    scales:{
+      x:{ type:'linear', min:0, max:23, ticks:{ stepSize:1, color:'#2a4a65',
+          callback: v => `${v}:00` }, grid:{ color:'rgba(0,200,255,0.04)' } },
+      y:{ ticks:{ color:'#2a4a65' }, grid:{ color:'rgba(0,200,255,0.04)' }, beginAtZero:true,
+          title:{ display:true, text:'Objects Detected', color:'#2a4a65' } }
+    }
+  }
+});
+
+async function loadAlerts() {
+  try {
+    const r = await fetch('/api/alerts'); const items = await r.json();
+    const list = document.getElementById('alert-list');
+    document.getElementById('al-badge').textContent = `${items.length} events`;
+    document.getElementById('al-count').textContent = items.length;
+
+    if (!items.length) {
+      list.innerHTML = '<div class="no-data"><div style="font-size:32px;margin-bottom:8px">✅</div>No alerts triggered yet</div>';
+      return;
+    }
+
+    const peak = Math.max(...items.map(i => i.total));
+    document.getElementById('al-peak').textContent = peak;
+    document.getElementById('al-last').textContent = items[0]?.ts?.slice(11,16) || '–';
+
+    // Timeline data
+    tlChart.data.datasets[0].data = items.map(i => {
+      const h = parseInt(i.ts.split(' ')[1]?.split(':')[0] || 0);
+      return { x: h, y: i.total, label: i.ts };
+    });
+    tlChart.update();
+
+    list.innerHTML = items.map((i,idx) => `
+      <div class="alert-item">
+        <div class="alert-icon">🚨</div>
+        <div class="alert-info">
+          <div class="alert-title">Crowd Threshold Exceeded</div>
+          <div class="alert-ts">${i.ts} &nbsp;·&nbsp; 👤 ${i.persons} persons &nbsp;·&nbsp; 🚗 ${i.vehicles} vehicles</div>
+        </div>
+        <div class="alert-badge">${i.total} objects</div>
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+async function pollCurrent() {
+  try {
+    const r = await fetch('/api/stats'); const d = await r.json();
+    document.getElementById('al-current').textContent = d.total;
+    const s = document.getElementById('al-status');
+    s.textContent = d.alert_active ? '⚠ THRESHOLD ACTIVE' : `Threshold: ${d.threshold}`;
+    s.style.color = d.alert_active ? 'var(--red)' : '';
+  } catch(e) {}
+}
+
+loadAlerts(); pollCurrent();
+setInterval(loadAlerts,   10000);
+setInterval(pollCurrent,  2000);
+</script>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% set active = "dashboard" %}
+{% block title %}Dashboard — CrowdSense AI{% endblock %}
+{% block page_name %}/ Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Stat Cards -->
+<div class="stat-grid">
+  <div class="stat-card c-red">
+    <div class="stat-glow"></div>
+    <div class="stat-label">Total Objects</div>
+    <div class="stat-value" id="s-total">0</div>
+    <div class="stat-sub" id="s-alert-sub">Watching…</div>
+    <div class="prog-bar"><div class="prog-fill red" id="s-total-bar" style="width:0%"></div></div>
+  </div>
+  <div class="stat-card c-cyan">
+    <div class="stat-glow"></div>
+    <div class="stat-label">Persons</div>
+    <div class="stat-value" id="s-persons">0</div>
+    <div class="stat-sub">People in frame</div>
+    <div class="prog-bar"><div class="prog-fill cyan" id="s-persons-bar" style="width:0%"></div></div>
+  </div>
+  <div class="stat-card c-amber">
+    <div class="stat-glow"></div>
+    <div class="stat-label">Vehicles</div>
+    <div class="stat-value" id="s-vehicles">0</div>
+    <div class="stat-sub">Cars, bikes, trucks</div>
+    <div class="prog-bar"><div class="prog-fill amber" id="s-vehicles-bar" style="width:0%"></div></div>
+  </div>
+  <div class="stat-card c-green">
+    <div class="stat-glow"></div>
+    <div class="stat-label">FPS</div>
+    <div class="stat-value" id="s-fps">0</div>
+    <div class="stat-sub">Inference speed</div>
+    <div class="prog-bar"><div class="prog-fill green" id="s-fps-bar" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- Live Feeds -->
+<div class="grid-2 mb-22">
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">📹 YOLOv8 Detection Feed</span>
+      <span class="card-badge">REAL-TIME</span>
+    </div>
+    <img class="feed-img" src="/video_feed" alt="Live Feed"/>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">🌡️ Activity Heatmap</span>
+      <span class="card-badge">OVERLAY</span>
+    </div>
+    <img class="feed-img" src="/heatmap_feed" alt="Heatmap"/>
+  </div>
+</div>
+
+<!-- Live Graph -->
+<div class="card mb-22">
+  <div class="card-head">
+    <span class="card-title">📈 Live Detection Graph (last 30s)</span>
+    <span class="card-badge" id="live-update-badge">UPDATING</span>
+  </div>
+  <div class="card-body">
+    <div class="chart-wrap"><canvas id="liveChart"></canvas></div>
+  </div>
+</div>
+
+<!-- Alert Banner (hidden by default) -->
+<div id="alert-banner" style="display:none;padding:14px 18px;border-radius:12px;margin-bottom:18px;
+  background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);
+  display:none;align-items:center;gap:14px;animation:alert-pulse 1s infinite">
+  <span style="font-size:26px">🚨</span>
+  <div>
+    <div style="font-weight:700;color:var(--red);font-size:15px" id="banner-msg">Crowd threshold exceeded!</div>
+    <div style="font-size:12px;color:var(--dim);margin-top:2px">Email alert dispatched to recipient</div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Live chart setup ─────────────────────────
+const ctx = document.getElementById('liveChart').getContext('2d');
+const liveChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [
+      { label: 'Total',    data: [], borderColor: '#ff3b5c', backgroundColor: 'rgba(255,59,92,.06)',  tension: .4, fill: true, pointRadius: 2, borderWidth: 2 },
+      { label: 'Persons',  data: [], borderColor: '#00c8ff', backgroundColor: 'rgba(0,200,255,.05)',  tension: .4, fill: true, pointRadius: 2, borderWidth: 1.5 },
+      { label: 'Vehicles', data: [], borderColor: '#ffb300', backgroundColor: 'rgba(255,179,0,.04)',  tension: .4, fill: true, pointRadius: 2, borderWidth: 1.5 },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+    plugins: { legend: { labels: { color: '#3d6080', usePointStyle: true, pointStyleWidth: 8 } } },
+    scales: {
+      x: { ticks: { color: '#2a4a65', maxTicksLimit: 10 }, grid: { color: 'rgba(0,200,255,0.05)' } },
+      y: { ticks: { color: '#2a4a65' }, grid: { color: 'rgba(0,200,255,0.05)' }, beginAtZero: true }
+    }
+  }
+});
+
+// ── Poll stats ───────────────────────────────
+let maxSeen = 20;
+async function pollStats() {
+  try {
+    const r = await fetch('/api/stats'); const d = await r.json();
+    document.getElementById('s-total').textContent    = d.total;
+    document.getElementById('s-persons').textContent  = d.persons;
+    document.getElementById('s-vehicles').textContent = d.vehicles;
+    document.getElementById('s-fps').textContent      = d.fps;
+
+    maxSeen = Math.max(maxSeen, d.total, 30);
+    document.getElementById('s-total-bar').style.width    = Math.min(100, d.total/maxSeen*100)    + '%';
+    document.getElementById('s-persons-bar').style.width  = Math.min(100, d.persons/maxSeen*100)  + '%';
+    document.getElementById('s-vehicles-bar').style.width = Math.min(100, d.vehicles/maxSeen*100) + '%';
+    document.getElementById('s-fps-bar').style.width      = Math.min(100, d.fps/30*100)           + '%';
+
+    const banner = document.getElementById('alert-banner');
+    if (d.alert_active) {
+      banner.style.display = 'flex';
+      document.getElementById('banner-msg').textContent = `🚨 ${d.total} objects detected — threshold exceeded!`;
+      document.getElementById('s-alert-sub').textContent = '⚠ THRESHOLD EXCEEDED';
+    } else {
+      banner.style.display = 'none';
+      document.getElementById('s-alert-sub').textContent = `Threshold: ${d.threshold}`;
+    }
+  } catch(e) {}
+}
+
+// ── Poll live history ────────────────────────
+async function pollHistory() {
+  try {
+    const r = await fetch('/api/live_history'); const pts = await r.json();
+    liveChart.data.labels            = pts.map(p => p.t);
+    liveChart.data.datasets[0].data  = pts.map(p => p.tot);
+    liveChart.data.datasets[1].data  = pts.map(p => p.p);
+    liveChart.data.datasets[2].data  = pts.map(p => p.v);
+    liveChart.update('none');
+    document.getElementById('live-update-badge').textContent = new Date().toLocaleTimeString('en-GB');
+  } catch(e) {}
+}
+
+pollStats(); pollHistory();
+setInterval(pollStats,   1500);
+setInterval(pollHistory, 2000);
+</script>
+{% endblock %}

@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% set active = "analytics" %}
+{% block title %}Analytics — CrowdSense AI{% endblock %}
+{% block page_name %}/ Analytics{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-title">Analytics</div>
+  <div class="page-sub">Real crowd & vehicle data — logged every 15 seconds from your live camera</div>
+</div>
+
+<!-- Location Card -->
+<div class="card mb-22" id="location-card">
+  <div class="card-head">
+    <span class="card-title">📍 Camera Location</span>
+    <span class="card-badge" id="loc-badge">DETECTING…</span>
+  </div>
+  <div class="card-body" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+      <div style="font-size:22px;font-weight:700;color:var(--green)" id="loc-city">—</div>
+      <div style="font-size:13px;color:var(--dim);margin-top:4px" id="loc-region">Fetching location…</div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:var(--muted);margin-top:6px" id="loc-coords">Lat: — &nbsp; Lon: —</div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <a id="maps-link" href="#" target="_blank"
+         style="padding:10px 18px;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.25);
+                border-radius:8px;color:var(--green);text-decoration:none;font-size:13px;font-weight:700">
+        🗺️ Google Maps
+      </a>
+      <div style="padding:10px 18px;background:rgba(0,200,255,0.06);border:1px solid var(--border);
+                  border-radius:8px;font-size:12px;color:var(--dim)">
+        📡 IP-based location
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Period Cards -->
+<div class="period-grid mb-22">
+  <div class="period-card morning">
+    <div class="period-icon">🌅</div>
+    <div class="period-name">Morning · 6am–12pm</div>
+    <div class="period-num" id="m-peak">–</div>
+    <div class="period-sub">Peak objects</div>
+    <div class="period-row">
+      <div class="period-mini"><div class="period-mini-val" id="m-p" style="color:var(--cyan)">–</div><div class="period-mini-lbl">Avg Persons</div></div>
+      <div class="period-mini"><div class="period-mini-val" id="m-v" style="color:var(--amber)">–</div><div class="period-mini-lbl">Avg Vehicles</div></div>
+      <div class="period-mini"><div class="period-mini-val" id="m-s" style="color:var(--dim)">–</div><div class="period-mini-lbl">Samples</div></div>
+    </div>
+  </div>
+  <div class="period-card afternoon">
+    <div class="period-icon">☀️</div>
+    <div class="period-name">Afternoon · 12pm–5pm</div>
+    <div class="period-num" id="a-peak">–</div>
+    <div class="period-sub">Peak objects</div>
+    <div class="period-row">
+      <div class="period-mini"><div class="period-mini-val" id="a-p" style="color:var(--cyan)">–</div><div class="period-mini-lbl">Avg Persons</div></div>
+      <div class="period-mini"><div class="period-mini-val" id="a-v" style="color:var(--amber)">–</div><div class="period-mini-lbl">Avg Vehicles</div></div>
+      <div class="period-mini"><div class="period-mini-val" id="a-s" style="color:var(--dim)">–</div><div class="period-mini-lbl">Samples</div></div>
+    </div>
+  </div>
+  <div class="period-card evening">
+    <div class="period-icon">🌆</div>
+    <div class="period-name">Evening · 5pm–9pm</div>
+    <div class="period-num" id="e-peak">–</div>
+    <div class="period-sub">Peak objects</div>
+    <div class="period-row">
+      <div class="period-mini"><div class="period-mini-val" id="e-p" style="color:var(--cyan)">–</div><div class="period-mini-lbl">Avg Persons</div></div>
+      <div class="period-mini"><div class="period-mini-val" id="e-v" style="color:var(--amber)">–</div><div class="period-mini-lbl">Avg Vehicles</div></div>
+      <div class="period-mini"><div class="period-mini-val" id="e-s" style="color:var(--dim)">–</div><div class="period-mini-lbl">Samples</div></div>
+    </div>
+  </div>
+  <div class="period-card night">
+    <div class="period-icon">🌙</div>
+    <div class="period-name">Night · 9pm–6am</div>
+    <div class="period-num" id="n-peak">–</div>
+    <div class="period-sub">Peak objects</div>
+    <div class="period-row">
+      <div class="period-mini"><div class="period-mini-val" id="n-p" style="color:var(--cyan)">–</div><div class="period-mini-lbl">Avg Persons</div></div>
+      <div class="period-mini"><div class="period-mini-val" id="n-v" style="color:var(--amber)">–</div><div class="period-mini-lbl">Avg Vehicles</div></div>
+      <div class="period-mini"><div class="period-mini-val" id="n-s" style="color:var(--dim)">–</div><div class="period-mini-lbl">Samples</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Hourly + Compare -->
+<div class="grid-2 mb-22">
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">📊 Hourly Trend — Today (Real Data)</span>
+      <span class="card-badge">LIVE DB</span>
+    </div>
+    <div class="card-body">
+      <div class="chart-wrap"><canvas id="hourlyChart"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">⚖️ Persons vs Vehicles — Today</span>
+      <span class="card-badge">COMPARISON</span>
+    </div>
+    <div class="card-body">
+      <div class="chart-wrap"><canvas id="compareChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- Period bar chart + Donut -->
+<div class="grid-2 mb-22">
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">🌓 Morning / Afternoon / Evening / Night</span>
+      <span class="card-badge">AVG PERSONS</span>
+    </div>
+    <div class="card-body">
+      <div class="chart-wrap"><canvas id="periodBarChart"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">🍩 Peak by Time of Day</span>
+      <span class="card-badge">TODAY</span>
+    </div>
+    <div class="card-body" style="display:flex;align-items:center;justify-content:center">
+      <div style="width:240px;height:240px"><canvas id="donutChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- 7-day + Peak hours -->
+<div class="grid-2 mb-22">
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">📅 Last 7 Days</span>
+      <span class="card-badge">DAILY AVG</span>
+    </div>
+    <div class="card-body">
+      <div class="chart-wrap"><canvas id="weekChart"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">🔥 Peak Detection Per Hour</span>
+      <span class="card-badge">MAX COUNT</span>
+    </div>
+    <div class="card-body">
+      <div class="chart-wrap"><canvas id="peakChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- Data info banner -->
+<div style="padding:14px 18px;border-radius:10px;background:rgba(0,200,255,0.05);
+            border:1px solid rgba(0,200,255,0.12);font-size:12px;color:var(--dim);margin-bottom:24px">
+  💡 <strong style="color:var(--cyan)">Real data builds automatically</strong> — your camera logs a detection snapshot every 15 seconds into the database.
+  The morning/afternoon/evening cards will fill up with real numbers as you run the app throughout the day.
+  Charts refresh every 30 seconds.
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const gOpts = () => ({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{ labels:{ color:'#3d6080', usePointStyle:true, pointStyleWidth:8, padding:14, font:{size:11} } } },
+  scales:{
+    x:{ ticks:{color:'#2a4a65',font:{family:'JetBrains Mono',size:10}}, grid:{color:'rgba(0,200,255,0.04)'} },
+    y:{ ticks:{color:'#2a4a65',font:{family:'JetBrains Mono',size:10},stepSize:1,callback:v=>Number.isInteger(v)?v:''},
+        grid:{color:'rgba(0,200,255,0.04)'}, beginAtZero:true, suggestedMax:5 }
+  }
+});
+
+const hourlyChart = new Chart(document.getElementById('hourlyChart'),{
+  type:'line', data:{labels:[],datasets:[
+    {label:'Persons', data:[],borderColor:'#00c8ff',backgroundColor:'rgba(0,200,255,.08)',tension:.4,fill:true,pointRadius:4,borderWidth:2.5},
+    {label:'Vehicles',data:[],borderColor:'#ffb300',backgroundColor:'rgba(255,179,0,.06)',tension:.4,fill:true,pointRadius:4,borderWidth:2.5},
+    {label:'Total',   data:[],borderColor:'#ff3b5c',backgroundColor:'transparent',tension:.4,fill:false,pointRadius:2,borderWidth:1.5,borderDash:[4,3]},
+  ]}, options:gOpts()
+});
+
+const compareChart = new Chart(document.getElementById('compareChart'),{
+  type:'bar', data:{labels:[],datasets:[
+    {label:'Persons', data:[],backgroundColor:'rgba(0,200,255,.65)',borderRadius:5,borderSkipped:false},
+    {label:'Vehicles',data:[],backgroundColor:'rgba(255,179,0,.65)',borderRadius:5,borderSkipped:false},
+  ]}, options:gOpts()
+});
+
+const periodBarChart = new Chart(document.getElementById('periodBarChart'),{
+  type:'bar',
+  data:{
+    labels:['🌅 Morning','☀️ Afternoon','🌆 Evening','🌙 Night'],
+    datasets:[
+      {label:'Avg Persons', data:[0,0,0,0],backgroundColor:['rgba(251,191,36,.7)','rgba(255,179,0,.7)','rgba(176,96,255,.7)','rgba(0,200,255,.7)'],borderRadius:8,borderSkipped:false},
+      {label:'Avg Vehicles',data:[0,0,0,0],backgroundColor:['rgba(251,191,36,.35)','rgba(255,179,0,.35)','rgba(176,96,255,.35)','rgba(0,200,255,.35)'],borderRadius:8,borderSkipped:false},
+    ]
+  },
+  options:{...gOpts(), plugins:{...gOpts().plugins}}
+});
+
+const donutChart = new Chart(document.getElementById('donutChart'),{
+  type:'doughnut',
+  data:{labels:['Morning','Afternoon','Evening','Night'],datasets:[{
+    data:[0,0,0,0],
+    backgroundColor:['rgba(251,191,36,.75)','rgba(255,179,0,.75)','rgba(176,96,255,.75)','rgba(0,200,255,.75)'],
+    borderColor:['#fbbf24','#ffb300','#b060ff','#00c8ff'],
+    borderWidth:1,hoverOffset:10
+  }]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
+    plugins:{legend:{position:'bottom',labels:{color:'#3d6080',padding:10,usePointStyle:true,font:{size:11}}}}}
+});
+
+const weekChart = new Chart(document.getElementById('weekChart'),{
+  type:'bar', data:{labels:[],datasets:[
+    {label:'Avg Persons', data:[],backgroundColor:'rgba(0,200,255,.6)',borderRadius:5},
+    {label:'Avg Vehicles',data:[],backgroundColor:'rgba(255,179,0,.6)',borderRadius:5},
+    {label:'Peak',        data:[],type:'line',borderColor:'#ff3b5c',backgroundColor:'transparent',tension:.4,pointRadius:5,borderWidth:2},
+  ]}, options:gOpts()
+});
+
+const peakChart = new Chart(document.getElementById('peakChart'),{
+  type:'bar', data:{labels:[],datasets:[{
+    label:'Peak Total',data:[],borderRadius:5,borderSkipped:false,
+    backgroundColor: ctx => {
+      const g=ctx.chart.ctx.createLinearGradient(0,0,0,200);
+      g.addColorStop(0,'rgba(255,59,92,.85)'); g.addColorStop(1,'rgba(255,59,92,.1)');
+      return g;
+    }
+  }]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:'#2a4a65',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(0,200,255,0.04)'}},
+            y:{ticks:{color:'#2a4a65',stepSize:1,callback:v=>Number.isInteger(v)?v:''},grid:{color:'rgba(0,200,255,0.04)'},beginAtZero:true,suggestedMax:5}}}
+});
+
+async function loadLocation() {
+  try {
+    const r=await fetch('/api/location'); const d=await r.json();
+    document.getElementById('loc-city').textContent    = `${d.city}`;
+    document.getElementById('loc-region').textContent  = `${d.region}, ${d.country}`;
+    document.getElementById('loc-coords').textContent  = `Lat: ${d.lat}  ·  Lon: ${d.lon}`;
+    document.getElementById('maps-link').href          = d.maps_url;
+    document.getElementById('loc-badge').textContent   = d.city !== 'Unknown' ? '✓ LOCATED' : 'UNKNOWN';
+  } catch(e) {}
+}
+
+async function loadHourly() {
+  const r=await fetch('/api/hourly'); const d=await r.json();
+  hourlyChart.data.labels = compareChart.data.labels = peakChart.data.labels = d.labels;
+  hourlyChart.data.datasets[0].data  = d.persons;
+  hourlyChart.data.datasets[1].data  = d.vehicles;
+  hourlyChart.data.datasets[2].data  = d.totals;
+  compareChart.data.datasets[0].data = d.persons;
+  compareChart.data.datasets[1].data = d.vehicles;
+  peakChart.data.datasets[0].data    = d.peaks;
+  hourlyChart.update(); compareChart.update(); peakChart.update();
+}
+
+async function loadWeek() {
+  const r=await fetch('/api/week'); const d=await r.json();
+  weekChart.data.labels=d.labels;
+  weekChart.data.datasets[0].data=d.persons;
+  weekChart.data.datasets[1].data=d.vehicles;
+  weekChart.data.datasets[2].data=d.peaks;
+  weekChart.update();
+}
+
+async function loadPeriods() {
+  const r=await fetch('/api/periods'); const d=await r.json();
+  const fill=(pre,obj)=>{
+    document.getElementById(pre+'-peak').textContent = obj.peak ?? '–';
+    document.getElementById(pre+'-p').textContent    = obj.avg_p ?? '–';
+    document.getElementById(pre+'-v').textContent    = obj.avg_v ?? '–';
+    document.getElementById(pre+'-s').textContent    = obj.samples ?? '–';
+  };
+  fill('m',d.Morning||{}); fill('a',d.Afternoon||{});
+  fill('e',d.Evening||{}); fill('n',d.Night||{});
+
+  periodBarChart.data.datasets[0].data = [
+    d.Morning?.avg_p||0, d.Afternoon?.avg_p||0, d.Evening?.avg_p||0, d.Night?.avg_p||0];
+  periodBarChart.data.datasets[1].data = [
+    d.Morning?.avg_v||0, d.Afternoon?.avg_v||0, d.Evening?.avg_v||0, d.Night?.avg_v||0];
+  periodBarChart.update();
+
+  donutChart.data.datasets[0].data = [
+    d.Morning?.peak||0, d.Afternoon?.peak||0, d.Evening?.peak||0, d.Night?.peak||0];
+  donutChart.update();
+}
+
+loadLocation(); loadHourly(); loadWeek(); loadPeriods();
+setInterval(loadHourly,  30000);
+setInterval(loadPeriods, 30000);
+</script>
+{% endblock %}
