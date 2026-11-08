@@ -25,10 +25,10 @@ The system can be used for:
 ## 🧠 Model Details
 
 * Model Used: YOLO-based object detection
-* Task: Person detection
+* Task: Person and vehical detection
 * Output:
 
-  * Bounding boxes around people
+  * Bounding boxes around people and vehical
   * Heatmap showing crowded regions
 
 ---
@@ -48,21 +48,6 @@ real-time-crowd-detection/
 
 ---
 
-## 📊 Dataset
-
-The dataset used for training is available here:
-
-👉 [Download Dataset](PASTE_YOUR_GOOGLE_DRIVE_LINK_HERE)
-
----
-
-## 🎬 Sample Output
-
-A sample output video demonstrating detection and heatmap:
-
-👉 [Watch Sample Video](PASTE_YOUR_VIDEO_LINK_HERE)
-
----
 
 ## ⚙️ How to Run
 
@@ -104,7 +89,7 @@ This helps in identifying:
 
 ## 🖼️ Output
 
-* Bounding boxes on detected people
+* Bounding boxes on detected people and vehicals
 * Real-time video processing
 * Heatmap overlay on frames
 
